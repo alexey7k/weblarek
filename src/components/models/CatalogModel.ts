@@ -1,6 +1,6 @@
 import { IProduct } from '../../types';
 
-export class Catalog {
+export class CatalogModel {
     private items: IProduct[] = [];
     private selectedItem: IProduct | null = null;
 

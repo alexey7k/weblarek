@@ -1,6 +1,6 @@
 import { IBuyer } from '../../types';
 
-export class CustomerData {
+export class CustomerDataModel {
     private payment: 'card' | 'cash' | '' = '';
     private address: string = '';
     private email: string = '';
