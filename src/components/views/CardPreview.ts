@@ -16,6 +16,8 @@ interface ICardActions {
 export class CardPreview extends Card<ICard> {
     protected _description: HTMLElement;
     protected _button: HTMLButtonElement;
+    protected _isInCart: boolean = false;
+    protected _hasPrice: boolean = true;
 
     constructor(container: HTMLElement, actions?: ICardActions) {
         super(container);
@@ -39,18 +41,35 @@ export class CardPreview extends Card<ICard> {
         this._button.disabled = value;
     }
 
-    render(data: ICard): HTMLElement {
-        super.render(data);
-        
-        // Проверяем, является ли товар "бесценным"
-        if (data.price === null) {
+    set isInCart(value: boolean) {
+        this._isInCart = value;
+        this.updateButtonState();
+    }
+
+    set hasPrice(value: boolean) {
+        this._hasPrice = value;
+        this.updateButtonState();
+    }
+
+    private updateButtonState() {
+        if (!this._hasPrice) {
+            // Если у товара нет цены, всегда показываем "Недоступно"
             this.buttonText = 'Недоступно';
             this.buttonDisabled = true;
+        } else if (this._isInCart) {
+            // Если товар в корзине и есть цена, показываем "Удалить из корзины"
+            this.buttonText = 'Удалить из корзины';
+            this.buttonDisabled = false;
         } else {
-            this.buttonText = 'В корзину';
+            // Если товара нет в корзине и есть цена, показываем "Купить"
+            this.buttonText = 'Купить';
             this.buttonDisabled = false;
         }
-        
+    }
+
+    render(data: ICard): HTMLElement {
+        super.render(data);
+        this.hasPrice = data.price !== null;
         return this.container;
     }
 }

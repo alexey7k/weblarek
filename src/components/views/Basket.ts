@@ -17,11 +17,11 @@ interface IBasket {
 /**
  * Интерфейс действий корзины
  * @property {() => void} onClick - Обработчик клика по кнопке оформления
- * @property {(index: number) => void} onRemove - Обработчик удаления товара по индексу
+ * @property {(id: string) => void} onRemove - Обработчик удаления товара по ID
  */
 interface IBasketActions {
     onClick: () => void;
-    onRemove: (index: number) => void;
+    onRemove: (id: string) => void;
 }
 
 /**
@@ -45,7 +45,7 @@ export class Basket extends Component<IBasket> {
         this._list.innerHTML = '';
         items.forEach((item, index) => {
             const card = new CardBasket(cloneTemplate<HTMLElement>('#card-basket'), {
-                onClick: () => this.actions.onRemove(index) // Передаем индекс вместо ID
+                onClick: () => this.actions.onRemove(item.id) // Передаем ID вместо индекса
             });
             
             // Передаем только необходимые данные для карточки корзины

@@ -11,15 +11,16 @@ export class CartModel {
     }
 
     addItem(item: IProduct): void {
-        this.items.push(item);
-        this.events.emit('cart:changed', { items: this.items });
-    }
-
-    removeItemByIndex(index: number): void {
-        if (index >= 0 && index < this.items.length) {
-            this.items.splice(index, 1);
+        // Проверяем, нет ли уже товара с таким ID в корзине
+        if (!this.isItemInCart(item.id)) {
+            this.items.push(item);
             this.events.emit('cart:changed', { items: this.items });
         }
+    }
+
+    removeItem(id: string): void {
+        this.items = this.items.filter(item => item.id !== id);
+        this.events.emit('cart:changed', { items: this.items });
     }
 
     clearCart(): void {

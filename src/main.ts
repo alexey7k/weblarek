@@ -52,11 +52,10 @@ const basket = new Basket(basketTemplate, {
         const orderForm = new Order(cloneTemplate<HTMLFormElement>('#order'), events);
         modal.content = orderForm.render(customerModel.getCustomerData());
     },
-    onRemove: (index: number) => {
-        cartModel.removeItemByIndex(index); // Удаляем по индексу
+    onRemove: (id: string) => {
+        cartModel.removeItem(id); // Удаляем по ID
     }
 });
-
 
 const success = new Success(cloneTemplate<HTMLElement>('#success'), {
      onClick: () => {
@@ -77,13 +76,21 @@ events.on('catalog:changed', () => {
 // Выбор товара для просмотра
 events.on('catalog:item-selected', (data: { item: IProduct }) => {
     currentModal = 'preview';
+    const isInCart = cartModel.isItemInCart(data.item.id);
+    const hasPrice = data.item.price !== null;
+    
     const preview = new CardPreview(cloneTemplate<HTMLElement>('#card-preview'), {
         onClick: () => {
-            // Для товаров с ценой "бесценно" не добавляем в корзину
-            if (data.item.price !== null) {
-                cartModel.addItem(data.item);
-                modal.close();
+            if (hasPrice) {
+                if (isInCart) {
+                    // Если товар уже в корзине - удаляем его
+                    cartModel.removeItem(data.item.id);
+                } else {
+                    // Если товара нет в корзине - добавляем его
+                    cartModel.addItem(data.item);
+                }
             }
+            modal.close();
         }
     });
 
@@ -97,6 +104,10 @@ events.on('catalog:item-selected', (data: { item: IProduct }) => {
         description: data.item.description || 'Описание отсутствует'
     };
     
+    // Устанавливаем состояние кнопки в зависимости от наличия товара в корзине и цены
+    preview.isInCart = isInCart;
+    preview.hasPrice = hasPrice;
+    
     modal.content = preview.render(itemData);
     modal.open();
 });
@@ -109,12 +120,21 @@ events.on('cart:changed', () => {
     const selectedItem = catalogModel.getSelectedItem();
     if (selectedItem && currentModal === 'preview') {
         const isInCart = cartModel.isItemInCart(selectedItem.id);
-        const preview = modal.container.querySelector('.card_preview');
-        if (preview) {
-            const button = preview.querySelector('.card__button');
+        const hasPrice = selectedItem.price !== null;
+        const previewElement = modal.container.querySelector('.card_preview');
+        if (previewElement) {
+            const button = previewElement.querySelector('.card__button');
             if (button) {
-                button.textContent = isInCart ? 'Уже в корзине' : 'В корзину';
-                (button as HTMLButtonElement).disabled = isInCart;
+                if (!hasPrice) {
+                    button.textContent = 'Недоступно';
+                    (button as HTMLButtonElement).disabled = true;
+                } else if (isInCart) {
+                    button.textContent = 'Удалить из корзины';
+                    (button as HTMLButtonElement).disabled = false;
+                } else {
+                    button.textContent = 'Купить';
+                    (button as HTMLButtonElement).disabled = false;
+                }
             }
         }
     }
