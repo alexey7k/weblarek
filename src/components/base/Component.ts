@@ -1,3 +1,4 @@
+
 /**
  * Базовый компонент
  */
@@ -15,6 +16,12 @@ export abstract class Component<T> {
             if (alt) {
                 element.alt = alt;
             }
+        }
+    }
+
+    protected setText(element: HTMLElement, value: string) {
+        if (element) {
+            element.textContent = value;
         }
     }
 

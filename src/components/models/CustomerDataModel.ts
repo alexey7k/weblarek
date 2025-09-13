@@ -1,4 +1,5 @@
 import { IBuyer } from '../../types';
+import { EventEmitter } from '../base/Events';
 
 export class CustomerDataModel {
     private payment: 'card' | 'cash' | '' = '';
@@ -6,11 +7,15 @@ export class CustomerDataModel {
     private email: string = '';
     private phone: string = '';
 
+    constructor(private events: EventEmitter) {}
+
     setCustomerData(data: IBuyer): void {
         if (data.payment !== undefined) this.payment = data.payment;
         if (data.address !== undefined) this.address = data.address;
         if (data.email !== undefined) this.email = data.email;
         if (data.phone !== undefined) this.phone = data.phone;
+        
+        this.events.emit('customer:changed', this.getCustomerData());
     }
 
     getCustomerData(): IBuyer {
@@ -27,6 +32,7 @@ export class CustomerDataModel {
         this.address = '';
         this.email = '';
         this.phone = '';
+        this.events.emit('customer:changed', this.getCustomerData());
     }
 
     validateData(): boolean {

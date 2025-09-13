@@ -44,6 +44,14 @@ export function ensureElement<T extends HTMLElement>(selectorElement: SelectorEl
     throw new Error('Unknown selector element');
 }
 
+export function ensureElementOrNull<T extends HTMLElement>(selector: string, context: HTMLElement = document as unknown as HTMLElement): T | null {
+    try {
+        return ensureElement<T>(selector, context);
+    } catch {
+        return null;
+    }
+}
+
 export function cloneTemplate<T extends HTMLElement>(query: string | HTMLTemplateElement): T {
     const template = ensureElement(query) as HTMLTemplateElement;
     if (!template.content.firstElementChild) {
@@ -135,4 +143,9 @@ export function createElement<
         }
     }
     return element;
+}
+
+// Функция конвертации SVG на PNG
+export function replaceExtensionToPng(url: string): string {
+    return url.replace(/\.svg$/, '.png');
 }
