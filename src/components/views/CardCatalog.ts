@@ -1,6 +1,5 @@
 import { Card } from './Card';
 import { ICard } from './Card';
-import { Component } from '../base/Component';
 
 /**
  * Класс карточки товара в каталоге
