@@ -1,22 +1,14 @@
 import { Form } from './Form';
 import { ensureElement } from '../../utils/utils';
 import { IEvents } from '../base/Events';
+import { validateEmail, validatePhone } from '../../utils/utils';
 
-/**
- * Интерфейс данных контактов
- * @property {string} email - Email покупателя
- * @property {string} phone - Телефон покупателя
- * @property {string} errors - Сообщения об ошибках
- */
 interface IContacts {
     email: string;
     phone: string;
     errors: string;
 }
 
-/**
- * Класс формы контактов
- */
 export class Contacts extends Form<IContacts> {
     protected _emailInput: HTMLInputElement;
     protected _phoneInput: HTMLInputElement;
@@ -39,14 +31,6 @@ export class Contacts extends Form<IContacts> {
             events.emit('contacts.phone:change', { phone: this._phoneInput.value });
             this.validateForm();
         });
-
-        // Явно обрабатываем отправку формы
-        this.container.addEventListener('submit', (e: Event) => {
-            e.preventDefault();
-            if (this.isValid()) {
-                events.emit('contacts:submit');
-            }
-        });
     }
 
     set email(value: string) {
@@ -61,29 +45,13 @@ export class Contacts extends Form<IContacts> {
         this.setText(this._errors, value);
     }
 
-    // Проверка валидности формы
     isValid(): boolean {
-        const emailValid = this.validateEmail(this._emailInput.value);
-        const phoneValid = this.validatePhone(this._phoneInput.value);
-        return emailValid && phoneValid;
+        return validateEmail(this._emailInput.value) && validatePhone(this._phoneInput.value);
     }
 
-    // Валидация email
-    private validateEmail(email: string): boolean {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-    }
-
-    // Валидация телефона
-    private validatePhone(phone: string): boolean {
-        const phoneRegex = /^(\+7|8)[\s\-]?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}$/;
-        return phoneRegex.test(phone);
-    }
-
-    // Валидация формы контактов
     private validateForm() {
-        const emailValid = this.validateEmail(this._emailInput.value);
-        const phoneValid = this.validatePhone(this._phoneInput.value);
+        const emailValid = validateEmail(this._emailInput.value);
+        const phoneValid = validatePhone(this._phoneInput.value);
 
         if (!emailValid && !phoneValid) {
             this.errors = 'Введите корректный email и телефон';

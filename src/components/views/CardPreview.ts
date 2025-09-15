@@ -2,17 +2,10 @@ import { Card } from './Card';
 import { ICard } from './Card';
 import { ensureElement } from '../../utils/utils';
 
-/**
- * Интерфейс действий карточки превью
- * @property {(event: MouseEvent) => void} onClick - Обработчик клика по кнопке
- */
 interface ICardActions {
     onClick: (event: MouseEvent) => void;
 }
 
-/**
- * Класс карточки товара в модальном окне
- */
 export class CardPreview extends Card<ICard> {
     protected _description: HTMLElement;
     protected _button: HTMLButtonElement;

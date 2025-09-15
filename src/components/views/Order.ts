@@ -2,21 +2,12 @@ import { Form } from './Form';
 import { ensureElement } from '../../utils/utils';
 import { IEvents } from '../base/Events';
 
-/**
- * Интерфейс данных заказа
- * @property {string} address - Адрес доставки
- * @property {string} payment - Способ оплаты
- * @property {string} errors - Сообщения об ошибках
- */
 interface IOrder {
     address: string;
     payment: string;
     errors: string;
 }
 
-/**
- * Класс формы заказа
- */
 export class Order extends Form<IOrder> {
     protected _paymentButtons: HTMLButtonElement[];
     protected _addressInput: HTMLInputElement;
@@ -41,14 +32,6 @@ export class Order extends Form<IOrder> {
             events.emit('order.address:change', { address: this._addressInput.value });
             this.validateForm();
         });
-
-        // Явно обрабатываем отправку формы
-        this.container.addEventListener('submit', (e: Event) => {
-            e.preventDefault();
-            if (this.isValid()) {
-                events.emit('order:submit');
-            }
-        });
     }
 
     set payment(value: string) {
@@ -65,7 +48,6 @@ export class Order extends Form<IOrder> {
         this.setText(this._errors, value);
     }
 
-    // Проверка валидности формы
     isValid(): boolean {
         const hasPayment = this._paymentButtons.some(button => 
             button.classList.contains('button_alt-active')
@@ -74,7 +56,6 @@ export class Order extends Form<IOrder> {
         return hasPayment && hasAddress;
     }
 
-    // Валидация формы заказа
     private validateForm() {
         const hasPayment = this._paymentButtons.some(button => 
             button.classList.contains('button_alt-active')

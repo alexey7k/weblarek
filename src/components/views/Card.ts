@@ -1,16 +1,7 @@
 import { Component } from '../base/Component';
-import { ensureElement, ensureElementOrNull } from '../../utils/utils';
+import { ensureElementOrNull } from '../../utils/utils';
 import { categoryMap } from '../../utils/constants';
 
-/**
- * Интерфейс для данных карточки
- * @property {string} id - ID товара
- * @property {string} title - Название товара
- * @property {string} image - Изображение товара
- * @property {string} category - Категория товара
- * @property {number | null} price - Цена товара
- * @property {string} description - Описание товара (только для превью)
- */
 export interface ICard {
     id: string;
     title: string;
@@ -20,9 +11,6 @@ export interface ICard {
     description?: string;
 }
 
-/**
- * Базовый класс карточки товара
- */
 export class Card<T> extends Component<T> {
     protected _title: HTMLElement | null;
     protected _image: HTMLImageElement | null;

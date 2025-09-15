@@ -4,18 +4,10 @@ import { CardCatalog } from './CardCatalog';
 import { cloneTemplate, replaceExtensionToPng } from '../../utils/utils';
 import { CDN_URL } from '../../utils/constants';
 
-
-/**
- * Интерфейс действий галереи
- * @property {(item: IProduct) => void} onClick - Обработчик клика по карточке
- */
 interface IGalleryActions {
     onClick: (item: IProduct) => void;
 }
 
-/**
- * Класс галереи товаров
- */
 export class Gallery extends Component<IProduct[]> {
     protected _cards: HTMLElement[];
 

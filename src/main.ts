@@ -16,7 +16,7 @@ import { Success } from './components/views/Success';
 import { EventEmitter } from './components/base/Events';
 import { API_URL, CDN_URL } from './utils/constants';
 import { ensureElement, cloneTemplate, replaceExtensionToPng } from './utils/utils';
-import { IProduct, IOrderData, IOrderResult } from './types';
+import { IProduct, IOrderData, IOrderResult, IBuyer, ICatalogChangedEvent, ICartChangedEvent, IItemSelectedEvent, } from './types';
 
 // Инициализация событий
 const events = new EventEmitter();
@@ -69,12 +69,12 @@ let currentModal: string | null = null;
 // Обработчики событий
 
 // Загрузка каталога товаров
-events.on('catalog:changed', () => {
-    gallery.render(catalogModel.getItems());
+events.on('catalog:changed', (data: ICatalogChangedEvent) => {
+    gallery.render(data.items);
 });
 
 // Выбор товара для просмотра
-events.on('catalog:item-selected', (data: { item: IProduct }) => {
+events.on('catalog:item-selected', (data: IItemSelectedEvent) => {
     currentModal = 'preview';
     const isInCart = cartModel.isItemInCart(data.item.id);
     const hasPrice = data.item.price !== null;
@@ -83,10 +83,8 @@ events.on('catalog:item-selected', (data: { item: IProduct }) => {
         onClick: () => {
             if (hasPrice) {
                 if (isInCart) {
-                    // Если товар уже в корзине - удаляем его
                     cartModel.removeItem(data.item.id);
                 } else {
-                    // Если товара нет в корзине - добавляем его
                     cartModel.addItem(data.item);
                 }
             }
@@ -94,7 +92,6 @@ events.on('catalog:item-selected', (data: { item: IProduct }) => {
         }
     });
 
-    // Меняем расширение изображения на png
     const imageUrl = data.item.image ? 
         `${CDN_URL}/${replaceExtensionToPng(data.item.image)}` : '';
 
@@ -104,7 +101,6 @@ events.on('catalog:item-selected', (data: { item: IProduct }) => {
         description: data.item.description || 'Описание отсутствует'
     };
     
-    // Устанавливаем состояние кнопки в зависимости от наличия товара в корзине и цены
     preview.isInCart = isInCart;
     preview.hasPrice = hasPrice;
     
@@ -113,8 +109,8 @@ events.on('catalog:item-selected', (data: { item: IProduct }) => {
 });
 
 // Изменение состояния корзины
-events.on('cart:changed', () => {
-    header.counter = cartModel.getItemCount();
+events.on('cart:changed', (data: ICartChangedEvent) => {
+    header.counter = data.count;
     
     // Обновляем состояние кнопки в превью, если превью открыто
     const selectedItem = catalogModel.getSelectedItem();
@@ -142,8 +138,8 @@ events.on('cart:changed', () => {
     // Обновляем корзину, если она открыта
     if (currentModal === 'basket') {
         basket.render({
-            items: cartModel.getItems(),
-            total: cartModel.getTotalPrice()
+            items: data.items,
+            total: data.total
         });
         modal.content = basket.container;
     }
@@ -245,7 +241,7 @@ events.on('contacts:submit', () => {
 });
 
 // Изменение данных покупателя
-events.on('customer:changed', (data: any) => {
+events.on('customer:changed', (data: IBuyer) => {
     // Обновление состояния кнопок в формах
     const orderForm = modal.container.querySelector('.form_order');
     if (orderForm) {

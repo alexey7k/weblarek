@@ -2,9 +2,6 @@ import { Component } from '../base/Component';
 import { ensureElement } from '../../utils/utils';
 import { IEvents } from '../base/Events';
 
-/**
- * Базовый класс формы
- */
 export class Form<T> extends Component<T> {
     protected _submit: HTMLButtonElement;
     protected _errors: HTMLElement;

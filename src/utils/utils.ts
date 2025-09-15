@@ -149,3 +149,17 @@ export function createElement<
 export function replaceExtensionToPng(url: string): string {
     return url.replace(/\.svg$/, '.png');
 }
+
+export function validateEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+export function validatePhone(phone: string): boolean {
+    const phoneRegex = /^(\+7|8)[\s\-]?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}$/;
+    return phoneRegex.test(phone);
+}
+
+export function setVisible(element: HTMLElement, visible: boolean): void {
+    element.style.display = visible ? '' : 'none';
+}

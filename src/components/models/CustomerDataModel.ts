@@ -1,5 +1,6 @@
 import { IBuyer } from '../../types';
 import { EventEmitter } from '../base/Events';
+import { validateEmail, validatePhone } from '../../utils/utils';
 
 export class CustomerDataModel {
     private payment: 'card' | 'cash' | '' = '';
@@ -9,7 +10,7 @@ export class CustomerDataModel {
 
     constructor(private events: EventEmitter) {}
 
-    setCustomerData(data: IBuyer): void {
+    setCustomerData(data: Partial<IBuyer>): void {
         if (data.payment !== undefined) this.payment = data.payment;
         if (data.address !== undefined) this.address = data.address;
         if (data.email !== undefined) this.email = data.email;
@@ -51,12 +52,10 @@ export class CustomerDataModel {
     }
 
     validateEmail(): boolean {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(this.email);
+        return validateEmail(this.email);
     }
 
     validatePhone(): boolean {
-        const phoneRegex = /^(\+7|8)[\s\-]?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}$/;
-        return phoneRegex.test(this.phone);
+        return validatePhone(this.phone);
     }
 }
