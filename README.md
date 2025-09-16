@@ -227,15 +227,12 @@ Presenter - презентер содержит основную логику п
 `getCustomerData(): IBuyer` - возвращает полный объект со всеми текущими данными покупателя
 `setCustomerData(data: Partial<IBuyer>): void` - сохраняет переданные данные покупателя. Обновляет только те поля, которые были переданы в объекте. Генерирует событие 'customer:changed'
 `clearCustomerData(): void` - очищает все данные покупателя, сбрасывая значения к состоянию по умолчанию. Генерирует событие 'customer:changed'
-`validateData(): boolean` - выполняет комплексную проверку всех данных покупателя. Проверяет:
- - Способ оплаты: должен быть выбран ('card' или 'cash')
- - Адрес: не должен быть пустой строки
- - Телефон: должен соответствовать формату номеров телефонов
- - Email: должен соответствовать формату email-адресов
 `validatePayment(): boolean` - проверяет выбор способа оплаты
 `validateAddress(): boolean` - проверяет ввод адреса
 `validateEmail(): boolean` - проверяет корректный ввод email (использует функцию validateEmail из utils.ts)
 `validatePhone(): boolean` - проверяет корректный ввод телефона (использует функцию validatePhone из utils.ts)
+`getOrderValidationErrors(): string[]` - возвращает массив ошибок валидации для данных заказа (способ оплаты и адрес)
+`getContactsValidationErrors(): string[]` - возвращает массив ошибок валидации для контактных данных (email и телефон)
 
 ### Слой коммуникации
 
@@ -374,8 +371,6 @@ Presenter - презентер содержит основную логику п
 `set payment(value: string)` - устанавливает выбранный способ оплаты
 `set address(value: string)` - устанавливает адрес доставки
 `set errors(value: string)` - устанавливает текст ошибок
-`isValid(): boolean` - проверяет валидность формы (наличие выбранного способа оплаты и адреса)
-`validateForm(): void` - выполняет валидацию формы и устанавливает состояние кнопки отправки
 `render(data: IOrder): HTMLElement` - отображает данные формы заказа
 
 #### Класс Contacts
@@ -393,8 +388,6 @@ Presenter - презентер содержит основную логику п
 `set email(value: string)` - устанавливает email
 `set phone(value: string)` - устанавливает телефон
 `set errors(value: string)` - устанавливает текст ошибок
-`isValid(): boolean` - проверяет валидность формы (использует функции validateEmail и validatePhone из utils.ts)
-`validateForm(): void` - выполняет валидацию формы и устанавливает состояние кнопки отправки
 `render(data: IContacts): HTMLElement` - отображает данные формы контактов
 
 #### Класс Header
