@@ -23,14 +23,15 @@ export class Order extends Form<IOrder> {
             button.addEventListener('click', () => {
                 this.payment = button.name;
                 events.emit('order.payment:change', { payment: button.name });
-                this.validateForm();
             });
         });
 
         this._addressInput.addEventListener('input', () => {
             this.address = this._addressInput.value;
-            events.emit('order.address:change', { address: this._addressInput.value });
-            this.validateForm();
+            events.emit('order.address:change', { 
+                address: this._addressInput.value,
+                validate: true
+            });
         });
     }
 
@@ -48,41 +49,11 @@ export class Order extends Form<IOrder> {
         this.setText(this._errors, value);
     }
 
-    isValid(): boolean {
-        const hasPayment = this._paymentButtons.some(button => 
-            button.classList.contains('button_alt-active')
-        );
-        const hasAddress = this._addressInput.value.trim().length > 0;
-        return hasPayment && hasAddress;
-    }
-
-    private validateForm() {
-        const hasPayment = this._paymentButtons.some(button => 
-            button.classList.contains('button_alt-active')
-        );
-        const hasAddress = this._addressInput.value.trim().length > 0;
-
-        if (!hasPayment && !hasAddress) {
-            this.errors = 'Выберите способ оплаты и укажите адрес';
-            this.valid = false;
-        } else if (!hasPayment) {
-            this.errors = 'Выберите способ оплаты';
-            this.valid = false;
-        } else if (!hasAddress) {
-            this.errors = 'Необходимо указать адрес';
-            this.valid = false;
-        } else {
-            this.errors = '';
-            this.valid = true;
-        }
-    }
-
     render(data: IOrder): HTMLElement {
         super.render(data);
         this.payment = data.payment;
         this.address = data.address;
         this.errors = data.errors || '';
-        this.validateForm();
         return this.container;
     }
 }

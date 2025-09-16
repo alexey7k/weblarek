@@ -36,13 +36,6 @@ export class CustomerDataModel {
         this.events.emit('customer:changed', this.getCustomerData());
     }
 
-    validateData(): boolean {
-        return this.validatePayment() && 
-               this.validateAddress() && 
-               this.validateEmail() && 
-               this.validatePhone();
-    }
-
     validatePayment(): boolean {
         return this.payment === 'card' || this.payment === 'cash';
     }
@@ -57,5 +50,33 @@ export class CustomerDataModel {
 
     validatePhone(): boolean {
         return validatePhone(this.phone);
+    }
+
+    getOrderValidationErrors(): string[] {
+        const errors: string[] = [];
+        
+        if (!this.validatePayment()) {
+            errors.push('Выберите способ оплаты');
+        }
+        
+        if (!this.validateAddress()) {
+            errors.push('Необходимо указать адрес');
+        }
+        
+        return errors;
+    }
+
+    getContactsValidationErrors(): string[] {
+        const errors: string[] = [];
+        
+        if (!this.validateEmail()) {
+            errors.push('Введите корректный email');
+        }
+        
+        if (!this.validatePhone()) {
+            errors.push('Введите корректный телефон');
+        }
+        
+        return errors;
     }
 }

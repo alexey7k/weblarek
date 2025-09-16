@@ -1,13 +1,23 @@
 import { Card } from './Card';
 import { ICard } from './Card';
 
-export class CardCatalog extends Card<ICard> {
-    constructor(container: HTMLElement) {
-        super(container);
-    }
+/**
+ * Интерфейс действий карточки каталога
+ * @property {() => void} onClick - Обработчик клика по карточке
+ */
+interface ICardActions {
+    onClick: () => void;
+}
 
-    render(data: ICard): HTMLElement {
-        super.render(data);
-        return this.container;
+/**
+ * Класс карточки товара в каталоге
+ */
+export class CardCatalog extends Card<ICard> {
+    constructor(container: HTMLElement, protected actions?: ICardActions) {
+        super(container);
+        
+        if (actions?.onClick) {
+            this.container.addEventListener('click', actions.onClick);
+        }
     }
 }

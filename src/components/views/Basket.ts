@@ -24,6 +24,7 @@ export class Basket extends Component<IBasket> {
         this._list = ensureElement<HTMLElement>('.basket__list', container);
         this._total = ensureElement<HTMLElement>('.basket__price', container);
         this._button = ensureElement<HTMLButtonElement>('.basket__button', container);
+
         this._button.addEventListener('click', () => this.actions.onClick());
     }
 
@@ -33,9 +34,6 @@ export class Basket extends Component<IBasket> {
             const emptyMessage = document.createElement('ol');
             emptyMessage.classList.add('basket__item', 'basket__item_empty');
             emptyMessage.textContent = 'Корзина пуста';
-            emptyMessage.style.color = '#999';
-            emptyMessage.style.opacity = '0.7';
-            emptyMessage.style.border = 'transparent';
             this._list.innerHTML = '';
             this._list.appendChild(emptyMessage);
         } else {
@@ -45,14 +43,14 @@ export class Basket extends Component<IBasket> {
                     onClick: () => this.actions.onRemove(item.id)
                 });
                 
-                card.render({
+                const cardElement = card.render({
                     id: item.id,
                     title: item.title,
                     price: item.price,
                     index: index + 1
                 });
                 
-                this._list.append(card.container);
+                this._list.append(cardElement);
             });
         }
     }

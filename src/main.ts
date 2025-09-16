@@ -44,27 +44,39 @@ const gallery = new Gallery(galleryContainer, {
     }
 });
 
+// Переменные для отслеживания текущих представлений
+let currentPreview: CardPreview | null = null;
+let currentOrderForm: Order | null = null;
+let currentContactsForm: Contacts | null = null;
+let currentModal: string | null = null;
+
 // Создаем компоненты для модальных окон
 const basketTemplate = cloneTemplate<HTMLElement>('#basket');
 const basket = new Basket(basketTemplate, {
     onClick: () => {
         // Переход к оформлению заказа
-        const orderForm = new Order(cloneTemplate<HTMLFormElement>('#order'), events);
-        modal.content = orderForm.render(customerModel.getCustomerData());
+        currentModal = 'order';
+        currentOrderForm = new Order(cloneTemplate<HTMLFormElement>('#order'), events);
+        const customerData = customerModel.getCustomerData();
+        const orderFormElement = currentOrderForm.render({
+        address: customerData.address,
+        payment: customerData.payment,
+        errors: ''
+    });
+    modal.content = orderFormElement;
     },
+
     onRemove: (id: string) => {
-        cartModel.removeItem(id); // Удаляем по ID
+    cartModel.removeItem(id);
     }
 });
 
-const success = new Success(cloneTemplate<HTMLElement>('#success'), {
+const successTemplate = cloneTemplate<HTMLElement>('#success');
+const success = new Success(successTemplate, {
      onClick: () => {
          modal.close();
      }
  });
-
-// Переменная для отслеживания открытого модального окна
-let currentModal: string | null = null;
 
 // Обработчики событий
 
@@ -79,7 +91,7 @@ events.on('catalog:item-selected', (data: IItemSelectedEvent) => {
     const isInCart = cartModel.isItemInCart(data.item.id);
     const hasPrice = data.item.price !== null;
     
-    const preview = new CardPreview(cloneTemplate<HTMLElement>('#card-preview'), {
+    currentPreview = new CardPreview(cloneTemplate<HTMLElement>('#card-preview'), {
         onClick: () => {
             if (hasPrice) {
                 if (isInCart) {
@@ -101,10 +113,11 @@ events.on('catalog:item-selected', (data: IItemSelectedEvent) => {
         description: data.item.description || 'Описание отсутствует'
     };
     
-    preview.isInCart = isInCart;
-    preview.hasPrice = hasPrice;
+    currentPreview.isInCart = isInCart;
+    currentPreview.hasPrice = hasPrice;
     
-    modal.content = preview.render(itemData);
+    const previewElement = currentPreview.render(itemData);
+    modal.content = previewElement;
     modal.open();
 });
 
@@ -112,92 +125,119 @@ events.on('catalog:item-selected', (data: IItemSelectedEvent) => {
 events.on('cart:changed', (data: ICartChangedEvent) => {
     header.counter = data.count;
     
-    // Обновляем состояние кнопки в превью, если превью открыто
-    const selectedItem = catalogModel.getSelectedItem();
-    if (selectedItem && currentModal === 'preview') {
-        const isInCart = cartModel.isItemInCart(selectedItem.id);
-        const hasPrice = selectedItem.price !== null;
-        const previewElement = modal.container.querySelector('.card_preview');
-        if (previewElement) {
-            const button = previewElement.querySelector('.card__button');
-            if (button) {
-                if (!hasPrice) {
-                    button.textContent = 'Недоступно';
-                    (button as HTMLButtonElement).disabled = true;
-                } else if (isInCart) {
-                    button.textContent = 'Удалить из корзины';
-                    (button as HTMLButtonElement).disabled = false;
-                } else {
-                    button.textContent = 'Купить';
-                    (button as HTMLButtonElement).disabled = false;
-                }
-            }
+    // Обновляем состояние кнопки в превью через представление
+    if (currentModal === 'preview' && currentPreview) {
+        const selectedItem = catalogModel.getSelectedItem();
+        if (selectedItem) {
+            const isInCart = cartModel.isItemInCart(selectedItem.id);
+            const hasPrice = selectedItem.price !== null;
+            currentPreview.isInCart = isInCart;
+            currentPreview.hasPrice = hasPrice;
         }
     }
     
     // Обновляем корзину, если она открыта
     if (currentModal === 'basket') {
-        basket.render({
+        const basketElement = basket.render({
             items: data.items,
             total: data.total
         });
-        modal.content = basket.container;
+        modal.content = basketElement;
     }
 });
 
 // Открытие корзины
 events.on('basket:open', () => {
     currentModal = 'basket';
-    basket.render({
+    const basketElement = basket.render({
         items: cartModel.getItems(),
         total: cartModel.getTotalPrice()
     });
-    modal.content = basket.container;
+    modal.content = basketElement;
     modal.open();
 });
 
 // Обработка формы заказа
 events.on('order:submit', () => {
-    // Проверяем валидность данных в модели
-    if (customerModel.validatePayment() && customerModel.validateAddress()) {
+    const orderErrors = customerModel.getOrderValidationErrors();
+    
+    if (orderErrors.length === 0) {
         currentModal = 'contacts';
-        const contactsForm = new Contacts(cloneTemplate<HTMLFormElement>('#contacts'), events);
-        modal.content = contactsForm.render(customerModel.getCustomerData());
-    } else {
-        // Если данные не валидны, показываем ошибки
-        const orderForm = new Order(cloneTemplate<HTMLFormElement>('#order'), events);
-        orderForm.render({
-            ...customerModel.getCustomerData(),
-            errors: 'Пожалуйста, заполните все поля корректно'
+        currentContactsForm = new Contacts(cloneTemplate<HTMLFormElement>('#contacts'), events);
+        const customerData = customerModel.getCustomerData();
+        const contactsFormElement = currentContactsForm.render({
+            email: customerData.email,
+            phone: customerData.phone,
+            errors: '',
+            valid: false
         });
-        modal.content = orderForm.container;
+        modal.content = contactsFormElement;
+    } else {
+        if (currentOrderForm) {
+            currentOrderForm.errors = orderErrors.join(', ');
+            currentOrderForm.valid = orderErrors.length === 0;
+        }
     }
 });
 
 // Изменение способа оплаты
 events.on('order.payment:change', (data: { payment: string }) => {
     customerModel.setCustomerData({ payment: data.payment });
+    const orderErrors = customerModel.getOrderValidationErrors();
+    if (currentOrderForm) {
+        currentOrderForm.errors = orderErrors.join(', ');
+        currentOrderForm.valid = orderErrors.length === 0;
+    }
 });
 
 // Изменение адреса
-events.on('order.address:change', (data: { address: string }) => {
+events.on('order.address:change', (data: { address: string, validate?: boolean }) => {
     customerModel.setCustomerData({ address: data.address });
+    
+    // Проверяем валидность только если указан флаг validate
+    if (data.validate) {
+        const orderErrors = customerModel.getOrderValidationErrors();
+        if (currentOrderForm) {
+            currentOrderForm.errors = orderErrors.join(', ');
+            currentOrderForm.valid = orderErrors.length === 0;
+        }
+    }
 });
 
 // Изменение email
 events.on('contacts.email:change', (data: { email: string }) => {
     customerModel.setCustomerData({ email: data.email });
+    const validationErrors = customerModel.getContactsValidationErrors();
+    if (currentContactsForm) {
+        currentContactsForm.render({
+            email: customerModel.getCustomerData().email,
+            phone: customerModel.getCustomerData().phone,
+            errors: validationErrors.join(', '),
+            valid: validationErrors.length === 0
+        });
+    }
 });
 
 // Изменение телефона
 events.on('contacts.phone:change', (data: { phone: string }) => {
     customerModel.setCustomerData({ phone: data.phone });
+    const validationErrors = customerModel.getContactsValidationErrors();
+    if (currentContactsForm) {
+        currentContactsForm.render({
+            email: customerModel.getCustomerData().email,
+            phone: customerModel.getCustomerData().phone,
+            errors: validationErrors.join(', '),
+            valid: validationErrors.length === 0
+        });
+    }
 });
 
 // Обработка формы контактов
 events.on('contacts:submit', () => {
     // Проверяем валидность данных в модели
-    if (customerModel.validateEmail() && customerModel.validatePhone()) {
+    const validationErrors = customerModel.getContactsValidationErrors();
+    
+    if (validationErrors.length === 0) {
         // Создание заказа
         const orderData: IOrderData = {
             payment: customerModel.getCustomerData().payment as 'card' | 'cash',
@@ -212,8 +252,8 @@ events.on('contacts:submit', () => {
             .then((result: IOrderResult) => {
                 currentModal = 'success';
                 // Показ успешного оформления заказа
-                success.total = result.total;
-                modal.content = success.container;
+                const successElement = success.render({ total: result.total });
+                modal.content = successElement;
                 
                 // Очистка корзины и данных покупателя
                 cartModel.clearCart();
@@ -221,55 +261,36 @@ events.on('contacts:submit', () => {
             })
             .catch(error => {
                 console.error('Ошибка оформления заказа:', error);
-                // Показать сообщение об ошибке
-                const contactsForm = new Contacts(cloneTemplate<HTMLFormElement>('#contacts'), events);
-                contactsForm.render({
-                    ...customerModel.getCustomerData(),
-                    errors: 'Ошибка оформления заказа. Попробуйте еще раз.'
+                currentContactsForm = new Contacts(cloneTemplate<HTMLFormElement>('#contacts'), events);
+                const customerData = customerModel.getCustomerData();
+                const contactsFormElement = currentContactsForm.render({
+                    email: customerData.email,
+                    phone: customerData.phone,
+                    errors: 'Ошибка оформления заказа. Попробуйте еще раз.',
+                    valid: false
                 });
-                modal.content = contactsForm.container;
+                modal.content = contactsFormElement;
             });
-    } else {
-        // Если данные не валидны, показываем ошибки
-        const contactsForm = new Contacts(cloneTemplate<HTMLFormElement>('#contacts'), events);
-        contactsForm.render({
-            ...customerModel.getCustomerData(),
-            errors: 'Пожалуйста, заполните все поля корректно'
-        });
-        modal.content = contactsForm.container;
-    }
-});
-
-// Изменение данных покупателя
-events.on('customer:changed', (data: IBuyer) => {
-    // Обновление состояния кнопок в формах
-    const orderForm = modal.container.querySelector('.form_order');
-    if (orderForm) {
-        const submitButton = orderForm.querySelector('button[type="submit"]');
-        if (submitButton) {
-            (submitButton as HTMLButtonElement).disabled = !customerModel.validatePayment() || !customerModel.validateAddress();
+        } else {
+            // Если данные не валидны, показываем ошибки из модели
+            currentContactsForm = new Contacts(cloneTemplate<HTMLFormElement>('#contacts'), events);
+            const customerData = customerModel.getCustomerData();
+            const contactsFormElement = currentContactsForm.render({
+                email: customerData.email,
+                phone: customerData.phone,
+                errors: validationErrors.join(', '),
+                valid: false
+            });
+            modal.content = contactsFormElement;
         }
-    }
-    
-    const contactsForm = modal.container.querySelector('.form_contacts');
-    if (contactsForm) {
-        const submitButton = contactsForm.querySelector('button[type="submit"]');
-        if (submitButton) {
-            (submitButton as HTMLButtonElement).disabled = !customerModel.validateEmail() || !customerModel.validatePhone();
-        }
-    }
 });
 
 // Закрытие модального окна
 events.on('modal:close', () => {
     currentModal = null;
-});
-
-// Валидация формы заказа
-events.on('order:validate', () => {
-    if (customerModel.validatePayment() && customerModel.validateAddress()) {
-        events.emit('order:validated');
-    }
+    currentPreview = null;
+    currentOrderForm = null;
+    currentContactsForm = null;
 });
 
 // Инициализация приложения
